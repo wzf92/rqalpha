@@ -1,0 +1,45 @@
+site_name: Documents
+site_description: 'description'
+copyright: '2020, Wang Zhifeng'
+repo_url:
+abc:
+site_author: 'Wang Zhifeng '
+extra:
+    # 版本号
+    version: 1.0
+nav:
+    - 主页: index.md
+    - 框架:
+        - rqalpha框架: framework_profile.md
+        - 数据库: framework_database.md
+        - 回测框架的使用: framework_backtrace_usage.md
+        - 开发文档:
+            - 获取代码:
+                - 通过Git获取代码(推荐): framework_git_fetch_code.md
+                - 通过浏览器直接下载代码: framework_url_fetch_code.md
+            - Pycharm环境搭建: framework_ide_pycharm.md
+            - 模块开发文档: framework_mod_develop.md
+            - 策略开发文档: framework_strategy_develop.md
+            - 模块开发示例(流量因子): framework_mod_develop_flow_factor.md
+            - 策略开发示例(流量突破策略): framework_strategy_develop_flow_factor_through.md
+    - 模块:
+        - 流量因子: mod_flow_factor.md
+        - 强制平仓: mod_force_close.md
+        - 强制不开仓: mod_force_not_open.md
+        - 止盈止损: mod_stop_profit_loss.md
+    - 策略算法: 
+        - 流量突破: strategy_flow_through.md
+        - 协整: strategy_cointegratior.md
+    - 配置项:
+        - base (基本配置) : config_base.md
+        - extra (扩展配置): config_extra.md
+        - mod (模块配置):
+          - sys_analyser: config_mod_sys_analyser.md
+          - sys_simulation: config_mod_sys_simulation.md
+          - calc_flow_factor: config_mod_calc_flow_factor.md
+          - force_close: config_mod_force_close.md
+          - force_not_open: config_mod_force_not_open.md
+    - 其他:
+        - Money Flow: other_money_flow.md
+theme: readthedocs
+

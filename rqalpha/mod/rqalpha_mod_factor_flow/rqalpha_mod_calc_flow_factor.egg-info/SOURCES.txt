@@ -1,0 +1,6 @@
+setup.py
+rqalpha_mod_calc_flow_factor.egg-info/PKG-INFO
+rqalpha_mod_calc_flow_factor.egg-info/SOURCES.txt
+rqalpha_mod_calc_flow_factor.egg-info/dependency_links.txt
+rqalpha_mod_calc_flow_factor.egg-info/not-zip-safe
+rqalpha_mod_calc_flow_factor.egg-info/top_level.txt

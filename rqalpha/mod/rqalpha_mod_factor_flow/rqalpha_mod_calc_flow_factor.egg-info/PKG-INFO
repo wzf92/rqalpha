@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: rqalpha-mod-calc-flow-factor
+Version: 0.1.0
+Summary: RQAlpha Mod to say hello
+Home-page: UNKNOWN
+Author: your name
+Author-email: your email address
+License: Apache License v2
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: Unix
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
