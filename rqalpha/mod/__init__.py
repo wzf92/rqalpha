@@ -97,6 +97,7 @@ SYSTEM_MOD_LIST = [
     "force_close",
     "force_not_open",
     "stop_profit_loss",
+    "ctp",
 ]
 
 DEFAULT_LOG_DIR = 'abc'
