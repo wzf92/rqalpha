@@ -18,18 +18,20 @@
 
 __config__ = {
     "login": {
-        'user_id': None,
-        'password': None,
-        'broker_id': "9999",
+        'user_id': "85012173",
+        'password': "1330840aA",
+        'broker_id': "8080",
+        'auth_code': "PRDCTCXGFOMWPTPA",
+        'user_production_info': "client_ctplq235_3.0"
     },
     "event": {
         "enabled": True,
         "all_day": False,
-        "address": "tcp://180.168.212.228:41213",
+        "address": "tcp://180.168.212.238:41214",
     },
     "trade": {
         "enabled": True,
-        "address": "tcp://180.168.146.187:10000",
+        "address": "tcp://180.168.212.238:41206",
     },
 }
 

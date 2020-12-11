@@ -25,8 +25,8 @@ from rqalpha.events import EVENT
 from rqalpha.events import Event as RqEvent
 from rqalpha.model.order import Order
 from rqalpha.model.trade import Trade
-from rqalpha.model.portfolio import Portfolio
-from rqalpha.model.base_position import Positions
+from rqalpha.portfolio import Portfolio
+#from rqalpha.model.base_position import Positions
 
 from .api import CtpTdApi
 from .data_dict import FakeTickDict
@@ -49,10 +49,13 @@ class TradeGateway(object):
 
         Environment.get_ins_dict = self.get_ins_dict
 
-    def connect(self, user_id, password, broker_id, td_address):
+    def connect(self, user_id, password, broker_id, td_address, auth_code, user_production_info):
 
-        self.td_api = CtpTdApi(self, user_id, password, broker_id, td_address)
+        self.on_log('开始连接。')
+
+        self.td_api = CtpTdApi(self, user_id, password, broker_id, td_address, auth_code, user_production_info)
         for i in range(self._retry_times):
+            self.on_log('尝试次数 %d。' % i)
             self.td_api.connect()
             sleep(self._retry_interval * (i+1))
             if self.td_api.logged_in:
@@ -83,17 +86,19 @@ class TradeGateway(object):
         self._env.event_bus.publish_event(RqEvent(EVENT.ORDER_PENDING_CANCEL, account=account, order=order))
         self.td_api.cancelOrder(order)
 
-    def get_portfolio(self):
-        FuturePosition = self._env.get_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name)
-        FutureAccount = self._env.get_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name)
-        self._cache.set_models(FutureAccount, FuturePosition)
-        future_account, static_value = self._cache.account
-        start_date = self._env.config.base.start_date
-        future_starting_cash = self._env.config.base.future_starting_cash
-        accounts = {
-            DEFAULT_ACCOUNT_TYPE.FUTURE.name: future_account
-        }
-        return Portfolio(start_date, static_value/future_starting_cash, future_starting_cash, accounts)
+
+#    def get_portfolio(self):
+#        FuturePosition = self._env.get_position_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name)
+#        FutureAccount = self._env.get_account_model(DEFAULT_ACCOUNT_TYPE.FUTURE.name)
+#        self._cache.set_models(FutureAccount, FuturePosition)
+#        future_account, static_value = self._cache.account
+#        start_date = self._env.config.base.start_date
+#        future_starting_cash = self._env.config.base.future_starting_cash
+#        accounts = {
+#            DEFAULT_ACCOUNT_TYPE.FUTURE.name: future_account
+#        }
+#        return Portfolio(start_date, static_value/future_starting_cash, future_starting_cash, accounts)
+
 
     def get_ins_dict(self, order_book_id=None):
         if order_book_id is not None:
@@ -258,7 +263,7 @@ class TradeGateway(object):
 
     @staticmethod
     def on_err(error, func_name):
-        system_log.error('CTP 错误，错误代码：%s，错误信息：%s' % (str(error.ErrorID), error.ErrorMsg.decode('GBK')))
+        system_log.error('CTP 错误，错误代码：%s，错误信息：%s' % (str(error.ErrorID), error.ErrorMsg))
 
 
 class DataCache(object):
@@ -330,43 +335,45 @@ class DataCache(object):
     def cache_order(self, order):
         self.orders[order.order_id] = order
 
-    @property
-    def positions(self):
-        PositionModel = self._position_model
-        ps = Positions(PositionModel)
-        for order_book_id, pos_dict in iteritems(self.pos):
-            position = PositionModel(order_book_id)
 
-            position._buy_old_holding_list = [(pos_dict.prev_settle_price, pos_dict.buy_old_quantity)]
-            position._sell_old_holding_list = [(pos_dict.prev_settle_price, pos_dict.sell_old_quantity)]
+#    @property
+#    def positions(self):
+#        PositionModel = self._position_model
+#        ps = Positions(PositionModel)
+#        for order_book_id, pos_dict in iteritems(self.pos):
+#            position = PositionModel(order_book_id)
+#
+#            position._buy_old_holding_list = [(pos_dict.prev_settle_price, pos_dict.buy_old_quantity)]
+#            position._sell_old_holding_list = [(pos_dict.prev_settle_price, pos_dict.sell_old_quantity)]
+#
+#            position._buy_transaction_cost = pos_dict.buy_transaction_cost
+#            position._sell_transaction_cost = pos_dict.sell_transaction_cost
+#            position._buy_realized_pnl = pos_dict.buy_realized_pnl
+#            position._sell_realized_pnl = pos_dict.sell_realized_pnl
+#
+#            position._buy_avg_open_price = pos_dict.buy_avg_open_price
+#            position._sell_avg_open_price = pos_dict.sell_avg_open_price
+#
+#            if order_book_id in self.trades:
+#                trades = sorted(self.trades[order_book_id], key=lambda t: t.trade_id, reverse=True)
+#
+#                buy_today_holding_list = []
+#                sell_today_holding_list = []
+#                for trade_dict in trades:
+#                    if trade_dict.side == SIDE.BUY and trade_dict.position_effect == POSITION_EFFECT.OPEN:
+#                        buy_today_holding_list.append((trade_dict.price, trade_dict.quantity))
+#                    elif trade_dict.side == SIDE.SELL and trade_dict.position_effect == POSITION_EFFECT.OPEN:
+#                        sell_today_holding_list.append((trade_dict.price, trade_dict.quantity))
+#
+#                self.process_today_holding_list(pos_dict.buy_today_quantity, buy_today_holding_list)
+#                self.process_today_holding_list(pos_dict.sell_today_quantity, sell_today_holding_list)
+#
+#                position._buy_today_holding_list = buy_today_holding_list
+#                position._sell_today_holding_list = sell_today_holding_list
+#
+#            ps[order_book_id] = position
+#        return ps
 
-            position._buy_transaction_cost = pos_dict.buy_transaction_cost
-            position._sell_transaction_cost = pos_dict.sell_transaction_cost
-            position._buy_realized_pnl = pos_dict.buy_realized_pnl
-            position._sell_realized_pnl = pos_dict.sell_realized_pnl
-
-            position._buy_avg_open_price = pos_dict.buy_avg_open_price
-            position._sell_avg_open_price = pos_dict.sell_avg_open_price
-
-            if order_book_id in self.trades:
-                trades = sorted(self.trades[order_book_id], key=lambda t: t.trade_id, reverse=True)
-
-                buy_today_holding_list = []
-                sell_today_holding_list = []
-                for trade_dict in trades:
-                    if trade_dict.side == SIDE.BUY and trade_dict.position_effect == POSITION_EFFECT.OPEN:
-                        buy_today_holding_list.append((trade_dict.price, trade_dict.quantity))
-                    elif trade_dict.side == SIDE.SELL and trade_dict.position_effect == POSITION_EFFECT.OPEN:
-                        sell_today_holding_list.append((trade_dict.price, trade_dict.quantity))
-
-                self.process_today_holding_list(pos_dict.buy_today_quantity, buy_today_holding_list)
-                self.process_today_holding_list(pos_dict.sell_today_quantity, sell_today_holding_list)
-
-                position._buy_today_holding_list = buy_today_holding_list
-                position._sell_today_holding_list = sell_today_holding_list
-
-            ps[order_book_id] = position
-        return ps
 
     def process_today_holding_list(self, today_quantity, holding_list):
         # check if list is empty
@@ -383,22 +390,22 @@ class DataCache(object):
                 consumed_quantity = oldest_quantity
             left_quantity -= consumed_quantity
 
-    @property
-    def account(self):
-        static_value = self._account_dict.yesterday_portfolio_value
-        ps = self.positions
-        realized_pnl = sum(position.realized_pnl for position in itervalues(ps))
-        cost = sum(position.transaction_cost for position in itervalues(ps))
-        margin = sum(position.margin for position in itervalues(ps))
-        total_cash = static_value + realized_pnl - cost - margin
+#    @property
+#    def account(self):
+#        static_value = self._account_dict.yesterday_portfolio_value
+#        ps = self.positions
+#        realized_pnl = sum(position.realized_pnl for position in itervalues(ps))
+#        cost = sum(position.transaction_cost for position in itervalues(ps))
+#        margin = sum(position.margin for position in itervalues(ps))
+#        total_cash = static_value + realized_pnl - cost - margin
+#
+#        AccountModel = self._account_model
+#        account = AccountModel(total_cash, ps)
+#        account._frozen_cash = sum(
+#            [margin_of(order_dict.order_book_id, order_dict.unfilled_quantity, order_dict.price) for order_dict in
+#             self._qry_order_cache.values() if order_dict.status == ORDER_STATUS.ACTIVE])
+#        return account, static_value
 
-        AccountModel = self._account_model
-        account = AccountModel(total_cash, ps)
-        account._frozen_cash = sum(
-            [margin_of(order_dict.order_book_id, order_dict.unfilled_quantity, order_dict.price) for order_dict in
-             self._qry_order_cache.values() if order_dict.status == ORDER_STATUS.ACTIVE])
-        return account, static_value
-
-    def set_models(self, account_model, position_model):
-        self._account_model = account_model
-        self._position_model = position_model
+#    def set_models(self, account_model, position_model):
+#        self._account_model = account_model
+#        self._position_model = position_model

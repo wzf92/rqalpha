@@ -47,6 +47,8 @@ class CtpBroker(AbstractBroker):
     def cancel_order(self, order):
         self._trade_gateway.cancel_order(order)
 
+"""
     def get_portfolio(self):
         return self._trade_gateway.get_portfolio()
+"""
 

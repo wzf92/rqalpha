@@ -16,29 +16,32 @@
 
 import sys
 from functools import wraps
-
 from rqalpha.const import ORDER_TYPE, SIDE, POSITION_EFFECT
 
-from .pyctp import MdApi, TraderApi, ApiStruct
+#from .pyctp import MdApi, TraderApi, ApiStruct
 from .data_dict import TickDict, PositionDict, AccountDict, InstrumentDict, OrderDict, TradeDict, CommissionDict
 from ..utils import make_order_book_id, str2bytes, bytes2str
 
+from ctpwrapper import ApiStructure
+from ctpwrapper import MdApiPy
+from ctpwrapper import TraderApiPy
+from . import CtpDefines
+
 ORDER_TYPE_MAPPING = {
-    ORDER_TYPE.MARKET: ApiStruct.OPT_AnyPrice,
-    ORDER_TYPE.LIMIT: ApiStruct.OPT_LimitPrice,
+    ORDER_TYPE.MARKET: CtpDefines.OPT_AnyPrice,
+    ORDER_TYPE.LIMIT: CtpDefines.OPT_LimitPrice,
 }
 
 SIDE_MAPPING = {
-    SIDE.BUY: ApiStruct.D_Buy,
-    SIDE.SELL: ApiStruct.D_Sell,
+    SIDE.BUY: CtpDefines.D_Buy,
+    SIDE.SELL: CtpDefines.D_Sell,
 }
 
 POSITION_EFFECT_MAPPING = {
-    POSITION_EFFECT.OPEN: ApiStruct.OF_Open,
-    POSITION_EFFECT.CLOSE: ApiStruct.OF_Close,
-    POSITION_EFFECT.CLOSE_TODAY: ApiStruct.OF_CloseToday,
+    POSITION_EFFECT.OPEN: CtpDefines.OF_Open,
+    POSITION_EFFECT.CLOSE: CtpDefines.OF_Close,
+    POSITION_EFFECT.CLOSE_TODAY: CtpDefines.OF_CloseToday,
 }
-
 
 def query_in_sync(func):
     @wraps(func)
@@ -49,8 +52,7 @@ def query_in_sync(func):
             api.gateway.on_query(api.api_name, nRequestID, result)
     return wrapper
 
-
-class CtpMdApi(MdApi):
+class CtpMdApi(MdApiPy):
     def __init__(self, gateway, user_id, password, broker_id, address, api_name='ctp_md'):
         super(CtpMdApi, self).__init__()
 
@@ -135,7 +137,8 @@ class CtpMdApi(MdApi):
         """初始化连接"""
         if not self.connected:
             self.Create()
-            self.RegisterFront(str2bytes(self.address))
+            #self.RegisterFront(str2bytes(self.address))
+            self.RegisterFront(self.address)
             self.Init()
         else:
             self.login()
@@ -149,9 +152,9 @@ class CtpMdApi(MdApi):
     def login(self):
         """登录"""
         if not self.logged_in:
-            req = ApiStruct.ReqUserLogin(BrokerID=str2bytes(self.broker_id),
-                                         UserID=str2bytes(self.user_id),
-                                         Password=str2bytes(self.password))
+            req = ApiStructure.ReqUserLogin(BrokerID=self.broker_id,
+                                         UserID=self.user_id,
+                                         Password=self.password)
             req_id = self.req_id
             self.ReqUserLogin(req, req_id)
             return req_id
@@ -162,8 +165,8 @@ class CtpMdApi(MdApi):
         # self.Join()
 
 
-class CtpTdApi(TraderApi):
-    def __init__(self, gateway, user_id, password, broker_id, address, api_name='ctp_td'):
+class CtpTdApi(TraderApiPy):
+    def __init__(self, gateway, user_id, password, broker_id, address, auth_code, user_production_info, api_name='ctp_td'):
         super(CtpTdApi, self).__init__()
 
         self.gateway = gateway
@@ -177,13 +180,20 @@ class CtpTdApi(TraderApi):
         self.password = password
         self.broker_id = broker_id
         self.address = address
-        self.auth_code = None
-        self.user_production_info = None
+
+        self.auth_code = auth_code
+        self.user_production_info = user_production_info
+
+#        self.broker_id = broker_id
+#        self.investor_id = investor_id
+#        self.password = password
+#        self.auth_code = auth_code
+#        self.app_id = app_id
 
         self.front_id = 0
         self.session_id = 0
 
-        self.require_authentication = False
+        self.require_authentication = True
 
         self.pos_cache = {}
         self.ins_cache = {}
@@ -192,6 +202,7 @@ class CtpTdApi(TraderApi):
         self.api_name = api_name
 
     def OnFrontConnected(self):
+        print("OnFrontConnected")
         self.connected = True
         if self.require_authentication:
             self.authenticate()
@@ -209,6 +220,7 @@ class CtpTdApi(TraderApi):
 
     def OnRspAuthenticate(self, pRspAuthenticate, pRspInfo, nRequestID, bIsLast):
         """验证客户端回报"""
+        print("OnRspAuthenticate")
         if pRspInfo.ErrorID == 0:
             self.authenticated = True
             self.login()
@@ -217,6 +229,7 @@ class CtpTdApi(TraderApi):
 
     def OnRspUserLogin(self, pRspUserLogin, pRspInfo, nRequestID, bIsLast):
         """登陆回报"""
+        print("OnRspUserLogin")
         if pRspInfo.ErrorID == 0:
             self.front_id = pRspUserLogin.FrontID
             self.session_id = pRspUserLogin.SessionID
@@ -315,9 +328,16 @@ class CtpTdApi(TraderApi):
     def connect(self):
         if not self.connected:
             self.Create()
-            self.SubscribePrivateTopic(0)
-            self.SubscribePublicTopic(0)
-            self.RegisterFront(str2bytes(self.address))
+            #self.SubscribePrivateTopic(0)
+            #self.SubscribePublicTopic(0)
+            #self.RegisterFront(str2bytes(self.address))
+            print("SubscribePrivateTopic")
+            self.SubscribePrivateTopic(2)
+            print("SubscribePublicTopic")
+            self.SubscribePublicTopic(2)
+            print("RegisterFront")
+            self.RegisterFront(self.address)
+            print("Init")
             self.Init()
         else:
             if self.require_authentication:
@@ -328,11 +348,11 @@ class CtpTdApi(TraderApi):
     def authenticate(self):
         """申请验证"""
         if self.authenticated:
-            req = ApiStruct.AuthenticationInfo(
-                BrokerID=str2bytes(self.broker_id),
-                UserID=str2bytes(self.user_id),
-                AuthInfo=str2bytes(self.auth_code),
-                UserProductInfo=str2bytes(self.user_production_info)
+            req = ApiStructure.AuthenticationInfo(
+                BrokerID=self.broker_id,
+                UserID=self.user_id,
+                AuthInfo=self.auth_code,
+                UserProductInfo=self.user_production_info
             )
             req_id = self.req_id
             self.ReqAuthenticate(req, req_id)
@@ -342,24 +362,26 @@ class CtpTdApi(TraderApi):
 
     def login(self):
         """登录"""
+        print("login")
         if not self.logged_in:
-            req = ApiStruct.ReqUserLogin(
-                UserID=str2bytes(self.user_id),
-                BrokerID=str2bytes(self.broker_id),
-                Password=str2bytes(self.password),
+            req = ApiStructure.ReqUserLoginField(
+                UserID=self.user_id,
+                BrokerID=self.broker_id,
+                Password=self.password,
             )
+            print(req)
             req_id = self.req_id
             self.ReqUserLogin(req, req_id)
             return req_id
 
     def qrySettlementInfoConfirm(self):
-        req = ApiStruct.SettlementInfoConfirm(BrokerID=str2bytes(self.broker_id), InvestorID=str2bytes(self.user_id))
+        req = ApiStructure.SettlementInfoConfirm(BrokerID=str2bytes(self.broker_id), InvestorID=str2bytes(self.user_id))
         req_id = self.req_id
         self.ReqSettlementInfoConfirm(req, req_id)
 
     def qryInstrument(self):
         self.ins_cache = {}
-        req = ApiStruct.QryInstrument()
+        req = ApiStructure.QryInstrument()
         req_id = self.req_id
         self.ReqQryInstrument(req, req_id)
         return req_id
@@ -368,7 +390,7 @@ class CtpTdApi(TraderApi):
         ins_dict = self.gateway.get_ins_dict(order_book_id)
         if ins_dict is None:
             return None
-        req = ApiStruct.QryInstrumentCommissionRate(
+        req = ApiStructure.QryInstrumentCommissionRate(
             InstrumentID=str2bytes(ins_dict.instrument_id),
             InvestorID=str2bytes(self.user_id),
             BrokerID=str2bytes(self.broker_id),
@@ -378,14 +400,14 @@ class CtpTdApi(TraderApi):
         return req_id
 
     def qryAccount(self):
-        req = ApiStruct.QryTradingAccount()
+        req = ApiStructure.QryTradingAccount()
         req_id = self.req_id
         self.ReqQryTradingAccount(req, req_id)
         return req_id
 
     def qryPosition(self):
         self.pos_cache = {}
-        req = ApiStruct.QryInvestorPosition(
+        req = ApiStructure.QryInvestorPosition(
             BrokerID=str2bytes(self.broker_id),
             InvestorID=str2bytes(self.user_id)
         )
@@ -395,7 +417,7 @@ class CtpTdApi(TraderApi):
 
     def qryOrder(self):
         self.order_cache = {}
-        req = ApiStruct.QryOrder(
+        req = ApiStructure.QryOrder(
             BrokerID=str2bytes(self.broker_id),
             InvestorID=str2bytes(self.user_id)
         )
@@ -407,7 +429,7 @@ class CtpTdApi(TraderApi):
         ins_dict = self.gateway.get_ins_dict(order.order_book_id)
         if ins_dict is None:
             return None
-        req = ApiStruct.InputOrder(
+        req = ApiStructure.InputOrder(
             InstrumentID=str2bytes(ins_dict.instrument_id),
             LimitPrice=str2bytes(order.price),
             VolumeTotalOriginal=str2bytes(order.quantity),
@@ -420,12 +442,12 @@ class CtpTdApi(TraderApi):
             UserID=str2bytes(self.user_id),
             BrokerID=str2bytes(self.broker_id),
 
-            CombHedgeFlag=ApiStruct.HF_Speculation,
-            ContingentCondition=ApiStruct.CC_Immediately,
-            ForceCloseReason=ApiStruct.FCC_NotForceClose,
+            CombHedgeFlag=ApiStructure.HF_Speculation,
+            ContingentCondition=ApiStructure.CC_Immediately,
+            ForceCloseReason=ApiStructure.FCC_NotForceClose,
             IsAutoSuspend=0,
-            TimeCondition=ApiStruct.TC_GFD,
-            VolumeCondition=ApiStruct.VC_AV,
+            TimeCondition=ApiStructure.TC_GFD,
+            VolumeCondition=ApiStructure.VC_AV,
             MinVolume=1,
         )
         req_id = self.req_id
@@ -437,14 +459,14 @@ class CtpTdApi(TraderApi):
         if ins_dict is None:
             return None
 
-        req = ApiStruct.InputOrderAction(
+        req = ApiStructure.InputOrderAction(
             InstrumentID=str2bytes(ins_dict.instrument_id),
             ExchangeID=str2bytes(ins_dict.exchange_id),
             OrderRef=str2bytes(str(order.order_id)),
             FrontID=int(self.front_id),
             SessionID=int(self.session_id),
 
-            ActionFlag=ApiStruct.AF_Delete,
+            ActionFlag=ApiStructure.AF_Delete,
             BrokerID=str2bytes(self.broker_id),
             InvestorID=str2bytes(self.user_id),
         )

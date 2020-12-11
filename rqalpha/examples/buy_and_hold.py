@@ -26,5 +26,5 @@ def handle_bar(context, bar_dict):
     # TODO: 开始编写你的算法吧！
     if not context.fired:
         # order_percent并且传入1代表买入该股票并且使其占有投资组合的100%
-        order_percent(context.s1, 1)
+        # order_percent(context.s1, 1)
         context.fired = True

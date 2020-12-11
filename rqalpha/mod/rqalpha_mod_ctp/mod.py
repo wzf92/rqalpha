@@ -61,9 +61,11 @@ class CtpMod(AbstractMod):
         password = self._mod_config.login.password
         broker_id = self._mod_config.login.broker_id
         trade_frontend_uri = self._mod_config.trade.address
+        auth_code = self._mod_config.login.auth_code
+        user_production_info = self._mod_config.login.user_production_info
 
         self._trade_gateway = TradeGateway(self._env)
-        self._trade_gateway.connect(user_id, password, broker_id, trade_frontend_uri)
+        self._trade_gateway.connect(user_id, password, broker_id, trade_frontend_uri, auth_code, user_production_info)
 
     def _init_md_gateway(self):
         if not self._mod_config.event.enabled:

@@ -16,7 +16,7 @@
 
 import numpy as np
 
-from rqalpha.const import SIDE, POSITION_EFFECT, ORDER_STATUS, COMMISSION_TYPE, MARGIN_TYPE
+from rqalpha.const import SIDE, POSITION_EFFECT, ORDER_STATUS, COMMISSION_TYPE
 from rqalpha.model.order import LimitOrder
 
 from ..utils import make_order_book_id, make_underlying_symbol, is_future, bytes2str
@@ -242,7 +242,7 @@ class InstrumentDict(DataDict):
             self.contract_multiplier = data.VolumeMultiple
             self.long_margin_ratio = data.LongMarginRatio
             self.short_margin_ratio = data.ShortMarginRatio
-            self.margin_type = MARGIN_TYPE.BY_MONEY
+            self.margin_type = COMMISSION_TYPE.BY_MONEY
             self.instrument_id = bytes2str(data.InstrumentID)
             self.is_valid = True
         else:
