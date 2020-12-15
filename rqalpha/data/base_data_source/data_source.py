@@ -297,7 +297,9 @@ class BaseDataSource(AbstractDataSource):
         if not (DEFAULT_ACCOUNT_TYPE.STOCK in accounts or DEFAULT_ACCOUNT_TYPE.FUTURE in accounts):
             return date.min, date.max
         if frequency in ['tick', '1d', '1m']:
-            s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range('000001.XSHG')
+            #s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range('000001.XSHG')
+            s = "20100101000000"
+            e = "20991231000000"
             return convert_int_to_date(s).date(), convert_int_to_date(e).date()
 
     def get_ticks(self, order_book_id, date):

@@ -62,5 +62,7 @@ class DumpHDF5:
 
 
 if __name__ == "__main__":
-    dumper = DumpHDF5()
-    dumper.dump(outdir = "/Users/zhifeng/.rqalpha/bundle/output", db = "futures_min")
+    #dumper = DumpHDF5()
+    #dumper.dump(outdir = "/Users/zhifeng/.rqalpha/bundle/output", db = "futures_min")
+    dumper = DumpHDF5('localhost', 9999)
+    dumper.dump(outdir = "/tmp", db = "futures_min")

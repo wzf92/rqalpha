@@ -52,4 +52,5 @@ if __name__ == "__main__":
     #reader.read('/Users/zhifeng/Projects/rqalpha/data/hdf5/futures.h5', 'I2003')
     #reader.read('/Users/zhifeng/Projects/rqalpha/data/hdf5/futures.h5.out', 'I2003')
     #reader.test('/Users/zhifeng/Projects/rqalpha/data/hdf5/futures.h5', 'I2003')
-    reader.read('/Users/zhifeng/.rqalpha/bundle/output/futures_min.h5', 'I88')
+    #reader.read('/Users/zhifeng/.rqalpha/bundle/output/futures_min.h5', 'I88')
+    reader.read('/root/projects/rqalpha/tools/2020-12-15/futures_min.h5', 'I88')
