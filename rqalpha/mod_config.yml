@@ -26,3 +26,5 @@ mod:
     enabled: true
   stop_profit_loss:
     enabled: true
+  factor_rsi:
+    enabled: true
