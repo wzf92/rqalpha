@@ -5,5 +5,4 @@ __config__ = {
 
 def load_mod():
     from .mod import CalcRsiFactor
-    print('right')
     return CalcRsiFactor()

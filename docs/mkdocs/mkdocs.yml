@@ -22,6 +22,7 @@ nav:
             - 策略开发文档: framework_strategy_develop.md
             - 模块开发示例(流量因子): framework_mod_develop_flow_factor.md
             - 策略开发示例(流量突破策略): framework_strategy_develop_flow_factor_through.md
+        - 参数遍历调优: framework_params_opti.md
     - 模块:
         - 流量因子: mod_flow_factor.md
         - 强制平仓: mod_force_close.md

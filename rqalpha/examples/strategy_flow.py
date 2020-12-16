@@ -2,11 +2,6 @@ from rqalpha.apis import *
 
 STRATEGY_NAME = 'flow_through'
 
-#context.open_long_threshold = "> 0.1"
-#context.close_long_threshold = "< 0.1"
-#context.open_short_threshold = "< -0.1"
-#context.close_short_threshold = "> -0.1"
-
 
 def check_holding_long(context):
     return get_position(context.contract, POSITION_DIRECTION.LONG).quantity != 0
@@ -55,10 +50,10 @@ def do_open(context, bar_dict):
         return
     if not check_holding_long(context) and not check_holding_short(context):
         if check_through(context, bar_dict, context.open_long_threshold):
-            order_to(context.contract, 900)
+            order_to(context.contract, 1)
             context.state = "HOLDING_LONG"
         elif check_through(context, bar_dict, context.open_short_threshold):
-            order_to(context.contract, -900)
+            order_to(context.contract, -1)
             context.state = "HOLDING_SHORT"
 
 

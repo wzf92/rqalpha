@@ -87,7 +87,6 @@ class CalcRsiFactor(AbstractMod):
             event.bar_dict[contract].rsi = np.nan
             if event.bar_dict[contract].isnan:
                 continue
-            #print("right")
             if self._update_rsi_one_contract(contract, event.bar_dict[contract]):
                 event.bar_dict[contract].rsi = self._cur_rsi[contract]
         pass
