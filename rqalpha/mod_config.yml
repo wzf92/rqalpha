@@ -19,12 +19,12 @@ mod:
   sys_transaction_cost:
     enabled: true
   factor_flow:
-    enabled: true
+    enabled: false
   force_close:
-    enabled: true
+    enabled: false
   force_not_open:
-    enabled: true
+    enabled: false
   stop_profit_loss:
-    enabled: true
+    enabled: false
   factor_rsi:
-    enabled: true
+    enabled: false

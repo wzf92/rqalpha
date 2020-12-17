@@ -44,16 +44,20 @@ def do_close(context, bar_dict):
         order_to(context.contract, 0)
         context.state = "NONE"
 
+def get_max_quantity(context, bar_dict):
+    case = context.future_account.cash
+    price = bar_dict[context.contract].close
+    return int(case / price / 100)
 
 def do_open(context, bar_dict):
     if bar_dict[context.contract].force_not_open:
         return
     if not check_holding_long(context) and not check_holding_short(context):
         if check_through(context, bar_dict, context.open_long_threshold):
-            order_to(context.contract, 1)
+            order_to(context.contract, get_max_quantity(context, bar_dict))
             context.state = "HOLDING_LONG"
         elif check_through(context, bar_dict, context.open_short_threshold):
-            order_to(context.contract, -1)
+            order_to(context.contract, -get_max_quantity(context, bar_dict))
             context.state = "HOLDING_SHORT"
 
 
