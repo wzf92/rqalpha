@@ -79,12 +79,7 @@ class CtpLiveVerify:
         self._ctp_trades_list = []
         self._report_msg = []
         self._report_send_list = ["wzf_92@163.com"]
-        self._valify_list = [
-            {"trade_file_name":"i2105_trade.log", "data_file_name":"I88.csv"},
-            {"trade_file_name":"j2105_trade.log", "data_file_name":"J88.csv"},
-#            {"trade_file_name":"rb2105_trade.log", "data_file_name":"RB88.csv"},
-#            {"trade_file_name":"ru2105_trade.log", "data_file_name":"RU88.csv"},
-        ]
+        self._valify_list = []
         self._init()
 
 
@@ -94,25 +89,26 @@ class CtpLiveVerify:
             os.makedirs(self._output_file_dir)
         self._output_file_path = os.path.join(self._output_file_dir, self._output_file_name)
         self._live_cfg = parse_json(self._ctp_live_config)
-        self._suite_test = unittest.TestSuite()
+        for contract in self._live_cfg["contracts"]:
+            self._valify_list.append({"trade_log_path": contract["trade_log_path"], "kline_file_path": contract["kline_file_path"]})
+        print(self._valify_list)
 
 
     def _init_contract(self, contract):
-        self._contract_name =  contract["data_file_name"].split(".")[0]
-        self._ctp_live_data_path = os.path.join(self._ctp_live_data_dir, contract["data_file_name"])
-        self._ctp_live_trade_log_path = os.path.join(self._ctp_live_trade_log_dir, contract["trade_file_name"])
+        self._contract_name =  os.path.basename(contract["kline_file_path"]).split(".")[0]
+        self._ctp_live_data_path = contract["kline_file_path"]
+        self._ctp_live_trade_log_path = contract["trade_log_path"]
         self._output_file_dir_contract = os.path.join(self._output_file_dir, self._contract_name)
         if not os.path.exists(self._output_file_dir_contract):
             os.makedirs(self._output_file_dir_contract)
         self._backtrace_trade_log_path = os.path.join(self._output_file_dir_contract, "report", "trades.csv")
-        self._ctp_live_trade_log_path = os.path.join(self._ctp_live_trade_log_dir, contract["trade_file_name"])
 
 
     def create_hdf5(self):
         kline2hdf5 = Kline2HDF5.Kline2HDF5(self._output_file_path)
         for v in self._valify_list:
-            symbol = v["data_file_name"].split('.')[0]
-            kline2hdf5.translate(os.path.join(self._ctp_live_data_dir, v["data_file_name"]), symbol)
+            symbol = os.path.basename(v["kline_file_path"]).split('.')[0]
+            kline2hdf5.translate(v["kline_file_path"], symbol)
         kline2hdf5.finished()
          
 
@@ -210,6 +206,8 @@ class CtpLiveVerify:
                 self._config["strategy"]["flow_through"]["close_short_threshold"] = params["threshold_close_short"]
                 self._config["mod"]["stop_profit_loss"]["stop_profit"] = float(params["stop_profit"])
                 self._config["mod"]["stop_profit_loss"]["stop_loss"] = abs(float(params["stop_loss"]))
+                if 'force_close_day' in params.keys() and params['force_close_day'] == 'off':
+                    self._config["mod"]["force_close"]["enabled"] = False
                 break
 
     def run_backtrace(self, config, strategy_file_path):
@@ -233,7 +231,7 @@ class CtpLiveVerify:
                 ctp_surplus_list.append(ctp_trade)
         for backtrace_trade in self._backtrace_trades_list:
             if backtrace_trade not in self._ctp_trades_list:
-                backtrace_surplus_list.append(ctp_trade)
+                backtrace_surplus_list.append(backtrace_trade)
         if not ctp_surplus_list and not backtrace_surplus_list:
             self._report_msg.append("{name} verified pass.".format(name=self._contract_name))
             return True
@@ -245,7 +243,7 @@ class CtpLiveVerify:
                 self._report_msg.append("[{time}] {operation}".format(time=vars[0], operation=vars[1]))
             self._report_msg.append("")
         if backtrace_surplus_list:
-            self._report_msg.append("Found in the backtest log, but not in the ctp live log:\n")
+            self._report_msg.append("Found in the backtest log, but not in the ctp live log:")
             for backtrace_trade in backtrace_surplus_list:
                 vars = backtrace_trade.split(",")
                 self._report_msg.append("[{time}] {operation}".format(time=vars[0], operation=vars[1]))
@@ -262,12 +260,15 @@ class CtpLiveVerify:
 if __name__ == '__main__':
     config = {
       "base": {
-        "start_date": "2020-01-01",
-        "end_date": "2099-12-31",
+        "start_date": "2020-09-01",
+        "end_date": "2021-12-31",
         "frequency": "1m",
         "accounts": {
-            "future": 100000
+            "future": 10000000
         }
+      },
+      "extra": {
+        "user_log_level": "error"
       },
       "mod": {
         "sys_progress": {
@@ -277,12 +278,20 @@ if __name__ == '__main__':
         "sys_analyser": {
           "enabled": True
         },
-        "stop_profit_loss": {
-          "enabled": True
-        },
         "factor_flow": {
           "enabled": True,
           "log_dir": "flow_report"
+        },
+        "force_close": {
+          "enabled": True,
+        },
+        "force_not_open": {
+          "enabled": True,
+        },
+        "stop_profit_loss": {
+          "enabled": True,
+          "stop_profit": 0.01,
+          "stop_loss": 0.01,
         }
       },
       "strategy": {
