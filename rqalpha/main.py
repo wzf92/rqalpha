@@ -281,7 +281,7 @@ def set_loggers(config):
     for log in [system_log, user_system_log]:
         log.level = getattr(logbook, config.extra.log_level.upper(), logbook.NOTSET)
 
-    user_log.level = logbook.DEBUG
+    user_log.level = getattr(logbook, config.extra.user_log_level.upper(), logbook.WARNING)
 
     for logger_name, level in extra_config.logger:
         getattr(logger, logger_name).level = getattr(logbook, level.upper())

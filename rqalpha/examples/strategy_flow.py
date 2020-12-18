@@ -1,4 +1,6 @@
 from rqalpha.apis import *
+from rqalpha.utils.logger import user_system_log, user_log
+from logbook import FileHandler
 
 STRATEGY_NAME = 'flow_through'
 
@@ -30,30 +32,42 @@ def do_stop_profit_loss(context, bar_dict):
     if not check_holding_long(context) and not check_holding_short(context):
         return
     if bar_dict[context.contract].stop_profit or bar_dict[context.contract].stop_loss:
+        logger.info("close stop")
         order_to(context.contract, 0)
 
 
 def do_close(context, bar_dict):
     if bar_dict[context.contract].force_close:
+        logger.info("close force")
         order_to(context.contract, 0)
         return
     if check_holding_long(context) and check_through(context, bar_dict, context.close_long_threshold):
+        logger.info("close long")
         order_to(context.contract, 0)
         context.state = "NONE"
     elif check_holding_short(context) and check_through(context, bar_dict, context.close_short_threshold):
+        logger.info("close short")
         order_to(context.contract, 0)
         context.state = "NONE"
 
+def get_max_quantity(context, bar_dict):
+    case = context.future_account.cash
+    price = bar_dict[context.contract].close
+    return int(case / price / 100)
 
 def do_open(context, bar_dict):
     if bar_dict[context.contract].force_not_open:
         return
     if not check_holding_long(context) and not check_holding_short(context):
         if check_through(context, bar_dict, context.open_long_threshold):
-            order_to(context.contract, 1)
+            quantity = get_max_quantity(context, bar_dict)
+            logger.info("open long %d" % quantity)
+            order_to(context.contract, quantity)
             context.state = "HOLDING_LONG"
         elif check_through(context, bar_dict, context.open_short_threshold):
-            order_to(context.contract, -1)
+            quantity = get_max_quantity(context, bar_dict)
+            logger.info("open short %d" % quantity)
+            order_to(context.contract, -quantity)
             context.state = "HOLDING_SHORT"
 
 
@@ -71,6 +85,8 @@ def init_config(context):
 
 
 def init(context):
+    log_file = FileHandler("logbook_test.log", bubble=True, encoding='utf-8')
+    user_log.handlers.append(log_file)
     init_config(context)
     subscribe([context.contract])
     context.last_flow = np.nan
