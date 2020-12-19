@@ -16,6 +16,8 @@ class StopProfitLoss(AbstractMod):
     def start_up(self, env, mod_config):
         if "log_dir" in mod_config.keys():
             self._log_dir = mod_config.log_dir
+            if os.path.exists(self._log_dir) is False:
+                os.makedirs(self._log_dir)
         self._stop_profit = mod_config.stop_profit
         self._stop_loss = mod_config.stop_loss
 #        env.event_bus.add_listener(EVENT.BAR, self._check_force_close)
