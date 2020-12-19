@@ -1,0 +1,15 @@
+base:
+  start_date: 2020-05-01
+  end_date: 2020-11-01
+  frequency: 1m
+  strategy_file: strategy/2_strategy.py
+  accounts:
+    future: 100000
+
+mod:
+  sys_analyser:
+    enabled: true
+  force_close:
+    enabled: true
+    force_close_time: ["14:58-15:00", "22:58-23:00"]
+    log_dir: test_output

@@ -1,0 +1,14 @@
+base:
+  start_date: 2020-05-01
+  end_date: 2020-11-01
+  frequency: 1m
+  strategy_file: strategy/1_strategy.py
+  accounts:
+    future: 100000
+  
+mod:
+  sys_analyser:
+    enabled: true
+  force_close:
+    enabled: true
+    log_dir: test_output

@@ -24,6 +24,8 @@ class ForceClose(AbstractMod):
                                            'end': {'hour': int(end_time_v[0]), 'minute': int(end_time_v[1])}})
         if "log_dir" in mod_config.keys():
             self._log_dir = mod_config.log_dir
+            if os.path.exists(self._log_dir) is False:
+                os.makedirs(self._log_dir)
 
         #        env.event_bus.add_listener(EVENT.BAR, self._check_force_close)
         env.event_bus.prepend_listener(EVENT.BAR, self._check_force_close)

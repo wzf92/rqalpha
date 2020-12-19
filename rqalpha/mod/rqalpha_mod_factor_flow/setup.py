@@ -10,7 +10,7 @@ from setuptools import (
 )
 
 setup(
-    name='rqalpha_mod_calc_flow_factor',
+    name='rqalpha_mod_factor_flow',
     version="0.1.0",
     description='RQAlpha Mod to say hello',
     packages=find_packages(exclude=[]),

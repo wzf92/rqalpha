@@ -23,6 +23,8 @@ class ForceNotOpen(AbstractMod):
                                            'end': {'hour': int(end_time_v[0]), 'minute': int(end_time_v[1])}})
         if "log_dir" in mod_config.keys():
             self._log_dir = mod_config.log_dir
+            if os.path.exists(self._log_dir) is False:
+                os.makedirs(self._log_dir)
 #        env.event_bus.add_listener(EVENT.BAR, self._check_force_not_open)
         env.event_bus.prepend_listener(EVENT.BAR, self._check_force_not_open)
 
@@ -43,7 +45,6 @@ class ForceNotOpen(AbstractMod):
                 contract_list = list(event.bar_dict.keys())
                 for contract in contract_list:
                     event.bar_dict[contract].force_not_open = True
-                break
                 if not self._log_dir:
                     continue
                 if not self._log_file[contract]:
@@ -51,6 +52,7 @@ class ForceNotOpen(AbstractMod):
                     self._log_file[contract] = open(path, 'w')
                 msg = "%s,%s" % (str(cur_time), "FORCE_NOT_OPEN")
                 self._log_file[contract].write(msg + "\n")
+                break
         return
         # print("call _calc_flow")
         # if event.bar_dict._frequency != "1m":
