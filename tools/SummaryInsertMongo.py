@@ -25,6 +25,8 @@ for name in glob.glob(sys.argv[1]):
     result_dict = pd.read_pickle(name)
     # summary即回测报告中的summary.csv中的内容
     summary = result_dict["summary"]
+    summary["stop_profit"] = str(round(float(stop_profit)/10,2))
+    summary["stop_loss"] = str(round(float(stop_loss)/10,2))
     if strategy_type == "1":
         summary["open_long_threshold"] = "> %s" % threshold_1
         summary["close_long_threshold"] = "< %s" % threshold_1

@@ -7,9 +7,9 @@ from rqalpha import run
 
 types = {
         "1": {"ol": ">", "cl": "<", "os": "<", "cs":">"},        
-#        "2": {"ol": ">", "cl": ">", "os": "<", "cs":"<"},        
-#        "3": {"ol": "<", "cl": ">", "os": ">", "cs":"<"},        
-#        "4": {"ol": "<", "cl": "<", "os": ">", "cs":">"},        
+        "2": {"ol": ">", "cl": ">", "os": "<", "cs":"<"},        
+        "3": {"ol": "<", "cl": ">", "os": ">", "cs":"<"},        
+        "4": {"ol": "<", "cl": "<", "os": ">", "cs":">"},        
 }
 
 tasks = []
@@ -37,7 +37,7 @@ for k,v in types.items():
                 "sys_analyser": {
                   "enabled": True,
                   # 回测结果的保存路径，必须要有
-                  "output_file": "/root/projects/rqalpha/results/I88-{now_type}-{it1}-{it2}-0.1-0.1.pkl".format(
+                  "output_file": "/root/projects/rqalpha/results/I88-{now_type}-{it1}-{it2}-0.01-0.01.pkl".format(
                                   now_type=k, it1=it1, it2=it2,
                   )
                 },
