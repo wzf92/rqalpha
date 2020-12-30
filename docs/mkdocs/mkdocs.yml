@@ -41,6 +41,6 @@ nav:
           - force_close: config_mod_force_close.md
           - force_not_open: config_mod_force_not_open.md
     - 其他:
-        - Money Flow: other_money_flow.md
+        - 流量突破策略-局部最优参数遍历: other_strategy_flow_through_params_opti_local.md
 theme: readthedocs
 
