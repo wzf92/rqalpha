@@ -109,8 +109,9 @@ class HKStockTransactionCostDecider(StockTransactionCostDecider):
 
 
 class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
-    def __init__(self, commission_multiplier):
+    def __init__(self, commission_multiplier, close_commission_ratio_all):
         self.commission_multiplier = commission_multiplier
+        self.close_commission_ratio_all = close_commission_ratio_all
         self.hedge_type = HEDGE_TYPE.SPECULATION
 
         self.env = Environment.get_instance()
@@ -123,6 +124,8 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
             if position_effect == POSITION_EFFECT.OPEN:
                 commission += price * quantity * contract_multiplier * info[
                     'open_commission_ratio']
+            elif self.close_commission_ratio_all:
+                commission += price * quantity * contract_multiplier * info['close_commission_ratio']
             else:
                 commission += price * (
                         quantity - close_today_quantity
@@ -131,6 +134,8 @@ class CNFutureTransactionCostDecider(AbstractTransactionCostDecider):
         else:
             if position_effect == POSITION_EFFECT.OPEN:
                 commission += quantity * info['open_commission_ratio']
+            elif self.close_commission_ratio_all:
+                commission += quantity * info['close_commission_ratio']
             else:
                 commission += (quantity - close_today_quantity) * info['close_commission_ratio']
                 commission += close_today_quantity * info['close_commission_today_ratio']
