@@ -22,6 +22,8 @@ __config__ = {
     "hk_stock_min_commission": 50,
     # 设置手续费乘数，默认为1
     "commission_multiplier": 1,
+    # 平仓总是使用平昨手续费
+    "close_commission_ratio_all": True,
 }
 
 cli_prefix = "mod__sys_transaction_cost__"

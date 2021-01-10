@@ -38,7 +38,7 @@ class TransactionCostMod(AbstractMod):
                 ))
 
             env.set_transaction_cost_decider(INSTRUMENT_TYPE.FUTURE, CNFutureTransactionCostDecider(
-                mod_config.commission_multiplier
+                mod_config.commission_multiplier, mod_config.close_commission_ratio_all
             ))
 
         elif env.config.base.market == MARKET.HK:
