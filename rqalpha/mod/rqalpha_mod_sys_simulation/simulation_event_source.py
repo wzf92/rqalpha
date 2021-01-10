@@ -181,6 +181,55 @@ class SimulationEventSource(AbstractEventSource):
 
                 dt = self._get_after_trading_dt(date)
                 yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
+        elif frequency == '5m' or frequency == "15m":
+            for day in trading_dates:
+                before_trading_flag = True
+                date = day.to_pydatetime()
+                last_dt = None
+                done = False
+
+                dt_before_day_trading = date.replace(hour=8, minute=30)
+
+                while True:
+                    if done:
+                        break
+                    exit_loop = True
+                    trading_minutes = self._get_trading_minutes(date)
+                    for calendar_dt in trading_minutes:
+                        if last_dt is not None and calendar_dt < last_dt:
+                            continue
+
+                        if calendar_dt < dt_before_day_trading:
+                            trading_dt = calendar_dt.replace(year=date.year, month=date.month, day=date.day)
+                        else:
+                            trading_dt = calendar_dt
+                        if before_trading_flag:
+                            before_trading_flag = False
+                            yield Event(
+                                EVENT.BEFORE_TRADING,
+                                calendar_dt=calendar_dt - timedelta(minutes=30),
+                                trading_dt=trading_dt - timedelta(minutes=30)
+                            )
+                            yield Event(
+                                EVENT.OPEN_AUCTION,
+                                calendar_dt=calendar_dt - timedelta(minutes=3),
+                                trading_dt=trading_dt - timedelta(minutes=3),
+                            )
+                        if self._universe_changed:
+                            self._universe_changed = False
+                            last_dt = calendar_dt
+                            exit_loop = False
+                            break
+                        # yield handle bar
+                        if frequency == '5m' and calendar_dt.minute % 5 == 0:
+                            yield Event(EVENT.BAR, calendar_dt=calendar_dt, trading_dt=trading_dt)
+                        elif frequency == '15m' and calendar_dt.minute % 15 == 0:
+                            yield Event(EVENT.BAR, calendar_dt=calendar_dt, trading_dt=trading_dt)
+                    if exit_loop:
+                        done = True
+
+                dt = self._get_after_trading_dt(date)
+                yield Event(EVENT.AFTER_TRADING, calendar_dt=dt, trading_dt=dt)
         elif frequency == "tick":
             data_proxy = self._env.data_proxy
             for day in trading_dates:
