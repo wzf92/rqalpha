@@ -24,6 +24,8 @@ class CalcRsiFactor(AbstractMod):
         #self._save_flow_value_cnt = mod_config.size
         if "log_dir" in mod_config.keys():
             self._log_dir = mod_config.log_dir
+            if os.path.exists(self._log_dir) is False:
+                os.makedirs(self._log_dir)
         env.event_bus.add_listener(EVENT.PRE_BAR, self._update_rsi)
 
     def tear_down(self, success, exception=None):

@@ -7,6 +7,8 @@ import os
 import hashlib
 import yaml
 import glob
+import sh
+
 
 class TestModStopProfitLoss(unittest.TestCase):
     def setUp(self):
@@ -28,19 +30,21 @@ class TestModStopProfitLoss(unittest.TestCase):
         return os.path.join(self._root_path, path)
 
 
-    def _test01(self):
+    def test01(self):
         config = self.load_config(self._p('conf/1_test.yml'))
         try:
             run(config)
         except SystemExit as e:
             pass
-        with open(self._p("test_output/I88_stop_profit_loss.csv"), "rb") as f:
-            data = f.read()
-            file_md5 = hashlib.md5(data).hexdigest()
-        with open(self._p("expect_output/1_I88_stop_profit_loss.csv"), "rb") as f:
-            data = f.read()
-            exp_file_md5 = hashlib.md5(data).hexdigest()
-        self.assertEqual(exp_file_md5, file_md5)
+        diff_res = sh.diff(self._p("test_output/I88_stop_profit_loss.csv"), self._p("expect_output/1_I88_stop_profit_loss.csv"))
+        self.assertEqual(diff_res, "")
+        # with open(self._p("test_output/I88_stop_profit_loss.csv"), "rb") as f:
+        #     data = f.read()
+        #     file_md5 = hashlib.md5(data).hexdigest()
+        # with open(self._p("expect_output/1_I88_stop_profit_loss.csv"), "rb") as f:
+        #     data = f.read()
+        #     exp_file_md5 = hashlib.md5(data).hexdigest()
+        # self.assertEqual(exp_file_md5, file_md5)
 
 
     def test02(self):
@@ -49,13 +53,16 @@ class TestModStopProfitLoss(unittest.TestCase):
             run(config)
         except SystemExit as e:
             pass
-        with open(self._p("test_output/I88_stop_profit_loss.csv"), "rb") as f:
-            data = f.read()
-            file_md5 = hashlib.md5(data).hexdigest()
-        with open(self._p("expect_output/2_I88_stop_profit_loss.csv"), "rb") as f:
-            data = f.read()
-            exp_file_md5 = hashlib.md5(data).hexdigest()
-        self.assertEqual(exp_file_md5, file_md5)
+        diff_res = sh.diff(self._p("test_output/I88_stop_profit_loss.csv"), self._p("expect_output/2_I88_stop_profit_loss.csv"))
+        self.assertEqual(diff_res, "")
+
+        # with open(self._p("test_output/I88_stop_profit_loss.csv"), "rb") as f:
+        #     data = f.read()
+        #     file_md5 = hashlib.md5(data).hexdigest()
+        # with open(self._p("expect_output/2_I88_stop_profit_loss.csv"), "rb") as f:
+        #     data = f.read()
+        #     exp_file_md5 = hashlib.md5(data).hexdigest()
+        # self.assertEqual(exp_file_md5, file_md5)
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()
