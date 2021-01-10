@@ -37,6 +37,8 @@ class StopProfitLoss(AbstractMod):
         for contract in contract_list:
             long_positions = get_position(contract, POSITION_DIRECTION.LONG)
             short_positions = get_position(contract, POSITION_DIRECTION.SHORT)
+            if event.bar_dict[contract].isnan:
+                continue
             if long_positions.quantity == 0 and short_positions.quantity == 0:
                 continue
                 # order_to(contract, 0)

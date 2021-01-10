@@ -1,6 +1,5 @@
 __config__ = {
-    "slice": 14,
-    "log_dir": "report"
+    "slice": 14
 }
 
 def load_mod():

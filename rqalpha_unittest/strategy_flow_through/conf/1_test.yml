@@ -1,0 +1,28 @@
+base:
+  start_date: 2020-05-01
+  end_date: 2020-11-01
+  frequency: 1m
+  strategy_file: strategy/1_strategy.py
+  accounts:
+    future: 100000
+  
+mod:
+  sys_analyser:
+    enabled: true
+    report_save_path: test_output
+  factor_flow:
+    enabled: true
+    log_dir: test_output
+  force_close:
+    enabled: true
+  force_not_open:
+    enabled: true
+  stop_profit_loss:
+    enabled: true
+strategy:
+  flow_through:
+    contract: I88
+    open_long_threshold: "> 0.5"
+    close_long_threshold: "< 0.5"
+    open_short_threshold: "< -0.5"
+    close_short_threshold: "> -0.5"

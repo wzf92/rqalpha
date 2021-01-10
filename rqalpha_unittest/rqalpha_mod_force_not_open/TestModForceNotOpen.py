@@ -7,6 +7,8 @@ import os
 import hashlib
 import yaml
 import glob
+import sh
+
 
 class TestModForceNotOpen(unittest.TestCase):
     def setUp(self):
@@ -34,13 +36,8 @@ class TestModForceNotOpen(unittest.TestCase):
             run(config)
         except SystemExit as e:
             pass
-        with open(self._p("test_output/I88_force_not_open.csv"), "rb") as f:
-            data = f.read()
-            file_md5 = hashlib.md5(data).hexdigest()
-        with open(self._p("expect_output/1_I88_force_not_open.csv"), "rb") as f:
-            data = f.read()
-            exp_file_md5 = hashlib.md5(data).hexdigest()
-        self.assertEqual(exp_file_md5, file_md5)
+        diff_res = sh.diff(self._p("test_output/I88_force_not_open.csv"), self._p("expect_output/1_I88_force_not_open.csv"))
+        self.assertEqual(diff_res, "")
 
 
     def test02(self):
@@ -49,13 +46,9 @@ class TestModForceNotOpen(unittest.TestCase):
             run(config)
         except SystemExit as e:
             pass
-        with open(self._p("test_output/I88_force_not_open.csv"), "rb") as f:
-            data = f.read()
-            file_md5 = hashlib.md5(data).hexdigest()
-        with open(self._p("expect_output/2_I88_force_not_open.csv"), "rb") as f:
-            data = f.read()
-            exp_file_md5 = hashlib.md5(data).hexdigest()
-        self.assertEqual(exp_file_md5, file_md5)
+        diff_res = sh.diff(self._p("test_output/I88_force_not_open.csv"), self._p("expect_output/2_I88_force_not_open.csv"))
+        self.assertEqual(diff_res, "")
+
 
 if __name__ == '__main__':
     suite = unittest.TestSuite()

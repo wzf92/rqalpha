@@ -126,6 +126,14 @@ class BaseDataSource(AbstractDataSource):
         # 每日交易时间细化 @TODO
         res = []
 
+        # 00:00 - 02:30
+        start_dt = trading_dt.replace(hour = 9, minute = 1)
+        end_dt = trading_dt.replace(hour = 10, minute = 15)
+        cur_dt = start_dt
+        while cur_dt <= end_dt:
+            res.append(cur_dt)
+            cur_dt = cur_dt + timedelta(minutes = 1)
+
         # 09:01 - 10:15
         start_dt = trading_dt.replace(hour = 9, minute = 1)
         end_dt = trading_dt.replace(hour = 10, minute = 15)
@@ -150,13 +158,14 @@ class BaseDataSource(AbstractDataSource):
             res.append(cur_dt)
             cur_dt = cur_dt + timedelta(minutes=1)
 
-        # 21: 01 - 23:00
+        # 21: 01 - 23:59
         start_dt = trading_dt.replace(hour=21, minute=1)
-        end_dt = trading_dt.replace(hour=23, minute=0)
+        end_dt = trading_dt.replace(hour=23, minute=59)
         cur_dt = start_dt
         while cur_dt <= end_dt:
             res.append(cur_dt)
             cur_dt = cur_dt + timedelta(minutes = 1)
+
         return res
         # raise NotImplementedError
 

@@ -7,6 +7,8 @@ import os
 import hashlib
 import yaml
 import glob
+import sh
+
 
 class TestModFactorFlow(unittest.TestCase):
     def setUp(self):
@@ -37,13 +39,8 @@ class TestModFactorFlow(unittest.TestCase):
             run(config)
         except SystemExit as e:
             pass
-        with open(self._p("test_output/I88_flow.csv"), "rb") as f:
-            data = f.read()
-            file_md5 = hashlib.md5(data).hexdigest()
-        with open(self._p("expect_output/1_I88_flow.csv"), "rb") as f:
-            data = f.read()
-            exp_file_md5 = hashlib.md5(data).hexdigest()
-        self.assertEqual(exp_file_md5, file_md5)
+        diff_res = sh.diff(self._p("test_output/I88_flow.csv"), self._p("expect_output/1_I88_flow.csv"))
+        self.assertEqual(diff_res, "")
 
 
 if __name__ == '__main__':
