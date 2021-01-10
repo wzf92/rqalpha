@@ -212,7 +212,15 @@ class BaseDataSource(AbstractDataSource):
 
     def get_bar(self, instrument, dt, frequency):
         # type: (Instrument, Union[datetime, date], str) -> Optional[np.ndarray]
-        if frequency != '1d' and frequency != '1m':
+        DEFAULT_DTYPE = np.dtype([
+            ('datetime', np.uint64),
+            ('open', np.float),
+            ('close', np.float),
+            ('high', np.float),
+            ('low', np.float),
+            ('volume', np.float),
+        ])
+        if frequency not in ['1d', '1m', '5m', '15m', '30m']:
             raise NotImplementedError
         if frequency == '1d':
             bars = self._all_day_bars_of(instrument)
@@ -234,6 +242,59 @@ class BaseDataSource(AbstractDataSource):
             if pos >= len(bars) or bars['datetime'][pos] != dt:
                 return None
             return bars[pos]
+        elif frequency == '5m':
+            dt_day_start = np.uint64(convert_date_to_int(dt))
+            dt_day_end = np.uint(convert_date_to_int(dt + timedelta(days=1)))
+            bars = self._all_min_bars_of(instrument, dt_day_start, dt_day_end)
+            if len(bars) <= 0:
+                return
+            dt_merge_start = np.uint64(convert_date_min_to_int(dt - timedelta(minutes=4)))
+            dt_merge_end = np.uint64(convert_date_min_to_int(dt))
+            pos_merge_start = bars['datetime'].searchsorted(dt_merge_start)
+            pos_merge_end = bars['datetime'].searchsorted(dt_merge_end)
+            if pos_merge_end >= len(bars) or bars['datetime'][pos_merge_end] != dt_merge_end:
+                return None
+            merge_open_price = bars[pos_merge_start]['open']
+            merge_high_price = bars[pos_merge_start]['high']
+            merge_low_price = bars[pos_merge_start]['low']
+            merge_close_price = bars[pos_merge_end]['close']
+            merge_volume = 0
+            for pos in range(pos_merge_start, pos_merge_end + 1):
+                if bars[pos]['high'] > merge_high_price:
+                    merge_high_price = bars[pos]['high']
+                if bars[pos]['low'] < merge_low_price:
+                    merge_low_price = bars[pos]['low']
+                merge_volume += bars[pos]['volume']
+            new_array = np.array([(dt_merge_end, merge_open_price, merge_close_price, merge_high_price, merge_low_price, merge_volume)], dtype=DEFAULT_DTYPE)
+            return new_array[0]
+        elif frequency == '15m':
+            dt_day_start = np.uint64(convert_date_to_int(dt))
+            dt_day_end = np.uint(convert_date_to_int(dt + timedelta(days=1)))
+            bars = self._all_min_bars_of(instrument, dt_day_start, dt_day_end)
+            if len(bars) <= 0:
+                return
+            dt_merge_start = np.uint64(convert_date_min_to_int(dt - timedelta(minutes=14)))
+            dt_merge_end = np.uint64(convert_date_min_to_int(dt))
+            pos_merge_start = bars['datetime'].searchsorted(dt_merge_start)
+            pos_merge_end = bars['datetime'].searchsorted(dt_merge_end)
+            if pos_merge_end >= len(bars) or bars['datetime'][pos_merge_end] != dt_merge_end:
+                return None
+            merge_open_price = bars[pos_merge_start]['open']
+            merge_high_price = bars[pos_merge_start]['high']
+            merge_low_price = bars[pos_merge_start]['low']
+            merge_close_price = bars[pos_merge_end]['close']
+            merge_volume = 0
+            for pos in range(pos_merge_start, pos_merge_end + 1):
+                if bars[pos]['high'] > merge_high_price:
+                    merge_high_price = bars[pos]['high']
+                if bars[pos]['low'] < merge_low_price:
+                    merge_low_price = bars[pos]['low']
+                merge_volume += bars[pos]['volume']
+            new_array = np.array(
+                [(dt_merge_end, merge_open_price, merge_close_price, merge_high_price, merge_low_price, merge_volume)],
+                dtype=DEFAULT_DTYPE)
+            return new_array[0]
+            # return bars[pos]
 
 
     def get_settle_price(self, instrument, date):
@@ -305,7 +366,7 @@ class BaseDataSource(AbstractDataSource):
         accounts = Environment.get_instance().config.base.accounts
         if not (DEFAULT_ACCOUNT_TYPE.STOCK in accounts or DEFAULT_ACCOUNT_TYPE.FUTURE in accounts):
             return date.min, date.max
-        if frequency in ['tick', '1d', '1m']:
+        if frequency in ['tick', '1d', '1m', '5m', '15m', '30m']:
             #s, e = self._day_bars[INSTRUMENT_TYPE.INDX].get_date_range('000001.XSHG')
             s = "20100101000000"
             e = "20991231000000"
