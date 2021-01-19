@@ -51,9 +51,9 @@ def do_close(context, bar_dict):
         context.state = "NONE"
 
 def get_max_quantity(context, bar_dict):
-    case = context.future_account.cash
+    cash = context.future_account.cash
     price = bar_dict[context.contract].close
-    return int(case / price / 100)
+    return int(cash / price / 100)
 
 def do_open(context, bar_dict):
     if bar_dict[context.contract].force_not_open:

@@ -6,6 +6,7 @@ import copy
 import glob
 import pandas as pd
 import random
+import datetime
 
 from rqalpha import run
 
@@ -156,6 +157,7 @@ class BatchRun:
         summary = result_dict["summary"]
         summary["stop_profit"] = str(round(float(stop_profit),4))
         summary["stop_loss"] = str(round(float(stop_loss),4))
+        summary["trades_cnt"] = int(len(result_dict['trades']))
         if strategy_type == "1":
             summary["open_long_threshold"] = "> %s" % threshold_1
             summary["close_long_threshold"] = "< %s" % threshold_1
@@ -189,6 +191,13 @@ class BatchRun:
 
     def _calc_score(self, params):
 #        return round(params['annualized_returns']/params['max_drawdown'], 4) if params['max_drawdown'] > 0.000001 else 0
+        dt_start = datetime.datetime.strptime(params['start_date'], '%Y-%m-%d')
+        dt_end = datetime.datetime.strptime(params['end_date'], '%Y-%m-%d')
+        days = (dt_end - dt_start).days
+        trades_per_day = float(params['trades_cnt']) / days
+        if trades_per_day < 0.05:
+            logger.info('trades_per_day is %f, return -1' % trades_per_day)
+            return -1
         return round(params['total_returns']/params['max_drawdown'], 4) if params['max_drawdown'] > 0.000001 else 0
 
     def _filter_result(self):
@@ -256,6 +265,7 @@ class BatchRun:
         if disable_output:
             return
         summary = self._read_pickle(key)
+        logger.info(summary)
         self._all_result_dict[key] = summary
 
     def _foreach_threshold_down(self, init_key, init_score, step, pos, limit):
@@ -433,8 +443,8 @@ if __name__ == '__main__':
 #    contract_list = ['AU88','CU88','RB88','RU88','SC88','SM88','ZN88','IC88','IF88']
 #    contract_list = ['IF88','IC88','IH88']
 #    contract_list = ['IF88']
-#    contract_list = ['IH88','IC88','IF88','AL88','CU88','RB88','RU88','SC88','SM88','ZN88']
-    contract_list = ['RB88','RU88','SC88','SM88','ZN88']
+    contract_list = ['IH88','IC88','IF88','AL88','CU88','RB88','RU88','SC88','SM88','ZN88']
+#    contract_list = ['RB88','RU88','SC88','SM88','ZN88']
     for contract_name in contract_list:
         output_path = os.path.join('/root/strategy_flow_through_results', contract_name)
         if not os.path.exists(output_path):
