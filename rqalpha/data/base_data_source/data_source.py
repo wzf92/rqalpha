@@ -233,7 +233,7 @@ class BaseDataSource(AbstractDataSource):
             return bars[pos]
         elif frequency == '1m':
             dt_day_start = np.uint64(convert_date_to_int(dt))
-            dt_day_end = np.uint(convert_date_to_int(dt + timedelta(days=1)))
+            dt_day_end = np.uint64(convert_date_to_int(dt + timedelta(days=1)))
             bars = self._all_min_bars_of(instrument, dt_day_start, dt_day_end)
             if len(bars) <= 0:
                 return
@@ -244,7 +244,7 @@ class BaseDataSource(AbstractDataSource):
             return bars[pos]
         elif frequency == '5m':
             dt_day_start = np.uint64(convert_date_to_int(dt))
-            dt_day_end = np.uint(convert_date_to_int(dt + timedelta(days=1)))
+            dt_day_end = np.uint64(convert_date_to_int(dt + timedelta(days=1)))
             bars = self._all_min_bars_of(instrument, dt_day_start, dt_day_end)
             if len(bars) <= 0:
                 return
@@ -269,7 +269,7 @@ class BaseDataSource(AbstractDataSource):
             return new_array[0]
         elif frequency == '15m':
             dt_day_start = np.uint64(convert_date_to_int(dt))
-            dt_day_end = np.uint(convert_date_to_int(dt + timedelta(days=1)))
+            dt_day_end = np.uint64(convert_date_to_int(dt + timedelta(days=1)))
             bars = self._all_min_bars_of(instrument, dt_day_start, dt_day_end)
             if len(bars) <= 0:
                 return
@@ -320,13 +320,17 @@ class BaseDataSource(AbstractDataSource):
     def history_bars(self, instrument, bar_count, frequency, fields, dt,
                      skip_suspended=True, include_now=False,
                      adjust_type='pre', adjust_orig=None):
-        if frequency != '1d':
+        if frequency not in ['1m', '1d']:
             raise NotImplementedError
 
         if skip_suspended and instrument.type == 'CS':
             bars = self._filtered_day_bars(instrument)
-        else:
+        elif frequency == '1d':
             bars = self._all_day_bars_of(instrument)
+        elif frequency == '1m':
+            dt_end = np.uint64(convert_date_to_int(dt + timedelta(days=1)))
+            dt_start = np.uint(convert_date_to_int(dt - timedelta(days=int(bar_count/180) + 1)))
+            bars = self._all_min_bars_of(instrument, dt_start, dt_end)
 
         if not self._are_fields_valid(fields, bars.dtype.names):
             raise RQInvalidArgument("invalid fileds: {}".format(fields))
@@ -334,7 +338,10 @@ class BaseDataSource(AbstractDataSource):
         if len(bars) <= 0:
             return bars
 
-        dt = np.uint64(convert_date_to_int(dt))
+        if frequency == '1d':
+            dt = np.uint64(convert_date_to_int(dt))
+        elif frequency == '1m':
+            dt = np.uint64(convert_date_min_to_int(dt))
         i = bars['datetime'].searchsorted(dt, side='right')
         left = i - bar_count if i >= bar_count else 0
         bars = bars[left:i]
