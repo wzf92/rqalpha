@@ -329,7 +329,7 @@ class BaseDataSource(AbstractDataSource):
             bars = self._all_day_bars_of(instrument)
         elif frequency == '1m':
             dt_end = np.uint64(convert_date_to_int(dt + timedelta(days=1)))
-            dt_start = np.uint(convert_date_to_int(dt - timedelta(days=int(bar_count/180) + 1)))
+            dt_start = np.uint(convert_date_to_int(dt - timedelta(days=int(bar_count/180) + 3)))
             bars = self._all_min_bars_of(instrument, dt_start, dt_end)
 
         if not self._are_fields_valid(fields, bars.dtype.names):
