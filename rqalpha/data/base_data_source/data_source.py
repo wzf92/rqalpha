@@ -24,7 +24,7 @@ import pandas as pd
 
 from rqalpha.interface import AbstractDataSource
 from rqalpha.utils.functools import lru_cache
-from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date, convert_date_min_to_int
+from rqalpha.utils.datetime_func import convert_date_to_int, convert_int_to_date, convert_date_min_to_int, convert_int_to_datetime
 from rqalpha.const import INSTRUMENT_TYPE, TRADING_CALENDAR_TYPE
 from rqalpha.model.instrument import Instrument
 from rqalpha.utils.exception import RQInvalidArgument
@@ -210,8 +210,7 @@ class BaseDataSource(AbstractDataSource):
         bars = self._all_min_bars_of(instrument)
         return bars[bars['volume'] > 0]
 
-    def get_bar(self, instrument, dt, frequency):
-        # type: (Instrument, Union[datetime, date], str) -> Optional[np.ndarray]
+    def _history_merge_min_bar(self, bars):
         DEFAULT_DTYPE = np.dtype([
             ('datetime', np.uint64),
             ('open', np.float),
@@ -220,7 +219,61 @@ class BaseDataSource(AbstractDataSource):
             ('low', np.float),
             ('volume', np.float),
         ])
-        if frequency not in ['1d', '1m', '5m', '15m', '30m']:
+
+#        print(bars)
+        if len(bars) <= 0:
+            return None
+
+        merge_open_price = bars[0]['open']
+        merge_high_price = bars[0]['high']
+        merge_low_price = bars[0]['low']
+        merge_close_price = bars[-1]['close']
+        merge_volume = 0
+        for pos in range(0, len(bars)):
+            if bars[pos]['high'] > merge_high_price:
+                merge_high_price = bars[pos]['high']
+            if bars[pos]['low'] < merge_low_price:
+                merge_low_price = bars[pos]['low']
+            merge_volume += bars[pos]['volume']
+        new_array = np.array([(bars['datetime'][-1], merge_open_price, merge_close_price, merge_high_price, merge_low_price, merge_volume)], dtype=DEFAULT_DTYPE)
+#        print(new_array)
+        return new_array[0]
+
+
+    def _merge_min_bar(self, dt, bars, cnt):
+        DEFAULT_DTYPE = np.dtype([
+            ('datetime', np.uint64),
+            ('open', np.float),
+            ('close', np.float),
+            ('high', np.float),
+            ('low', np.float),
+            ('volume', np.float),
+        ])
+
+        dt_merge_start = np.uint64(convert_date_min_to_int(dt - timedelta(minutes=cnt-1)))
+        dt_merge_end = np.uint64(convert_date_min_to_int(dt))
+        pos_merge_start = bars['datetime'].searchsorted(dt_merge_start)
+        pos_merge_end = bars['datetime'].searchsorted(dt_merge_end)
+        if pos_merge_end >= len(bars) or bars['datetime'][pos_merge_end] != dt_merge_end:
+            return None
+        merge_open_price = bars[pos_merge_start]['open']
+        merge_high_price = bars[pos_merge_start]['high']
+        merge_low_price = bars[pos_merge_start]['low']
+        merge_close_price = bars[pos_merge_end]['close']
+        merge_volume = 0
+        for pos in range(pos_merge_start, pos_merge_end + 1):
+            if bars[pos]['high'] > merge_high_price:
+                merge_high_price = bars[pos]['high']
+            if bars[pos]['low'] < merge_low_price:
+                merge_low_price = bars[pos]['low']
+            merge_volume += bars[pos]['volume']
+        new_array = np.array([(dt_merge_end, merge_open_price, merge_close_price, merge_high_price, merge_low_price, merge_volume)], dtype=DEFAULT_DTYPE)
+        return new_array[0]
+
+
+    def get_bar(self, instrument, dt, frequency):
+        # type: (Instrument, Union[datetime, date], str) -> Optional[np.ndarray]
+        if frequency not in ['1d', '1m', '5m', '15m']:
             raise NotImplementedError
         if frequency == '1d':
             bars = self._all_day_bars_of(instrument)
@@ -248,54 +301,16 @@ class BaseDataSource(AbstractDataSource):
             bars = self._all_min_bars_of(instrument, dt_day_start, dt_day_end)
             if len(bars) <= 0:
                 return
-            dt_merge_start = np.uint64(convert_date_min_to_int(dt - timedelta(minutes=4)))
-            dt_merge_end = np.uint64(convert_date_min_to_int(dt))
-            pos_merge_start = bars['datetime'].searchsorted(dt_merge_start)
-            pos_merge_end = bars['datetime'].searchsorted(dt_merge_end)
-            if pos_merge_end >= len(bars) or bars['datetime'][pos_merge_end] != dt_merge_end:
-                return None
-            merge_open_price = bars[pos_merge_start]['open']
-            merge_high_price = bars[pos_merge_start]['high']
-            merge_low_price = bars[pos_merge_start]['low']
-            merge_close_price = bars[pos_merge_end]['close']
-            merge_volume = 0
-            for pos in range(pos_merge_start, pos_merge_end + 1):
-                if bars[pos]['high'] > merge_high_price:
-                    merge_high_price = bars[pos]['high']
-                if bars[pos]['low'] < merge_low_price:
-                    merge_low_price = bars[pos]['low']
-                merge_volume += bars[pos]['volume']
-            new_array = np.array([(dt_merge_end, merge_open_price, merge_close_price, merge_high_price, merge_low_price, merge_volume)], dtype=DEFAULT_DTYPE)
-            return new_array[0]
+            merge_bar = self._merge_min_bar(dt, bars, 5)
+            return merge_bar
         elif frequency == '15m':
             dt_day_start = np.uint64(convert_date_to_int(dt))
             dt_day_end = np.uint64(convert_date_to_int(dt + timedelta(days=1)))
             bars = self._all_min_bars_of(instrument, dt_day_start, dt_day_end)
             if len(bars) <= 0:
                 return
-            dt_merge_start = np.uint64(convert_date_min_to_int(dt - timedelta(minutes=14)))
-            dt_merge_end = np.uint64(convert_date_min_to_int(dt))
-            pos_merge_start = bars['datetime'].searchsorted(dt_merge_start)
-            pos_merge_end = bars['datetime'].searchsorted(dt_merge_end)
-            if pos_merge_end >= len(bars) or bars['datetime'][pos_merge_end] != dt_merge_end:
-                return None
-            merge_open_price = bars[pos_merge_start]['open']
-            merge_high_price = bars[pos_merge_start]['high']
-            merge_low_price = bars[pos_merge_start]['low']
-            merge_close_price = bars[pos_merge_end]['close']
-            merge_volume = 0
-            for pos in range(pos_merge_start, pos_merge_end + 1):
-                if bars[pos]['high'] > merge_high_price:
-                    merge_high_price = bars[pos]['high']
-                if bars[pos]['low'] < merge_low_price:
-                    merge_low_price = bars[pos]['low']
-                merge_volume += bars[pos]['volume']
-            new_array = np.array(
-                [(dt_merge_end, merge_open_price, merge_close_price, merge_high_price, merge_low_price, merge_volume)],
-                dtype=DEFAULT_DTYPE)
-            return new_array[0]
-            # return bars[pos]
-
+            merge_bar = self._merge_min_bar(dt, bars, 15)
+            return merge_bar
 
     def get_settle_price(self, instrument, date):
         bar = self.get_bar(instrument, date, '1d')
@@ -320,16 +335,16 @@ class BaseDataSource(AbstractDataSource):
     def history_bars(self, instrument, bar_count, frequency, fields, dt,
                      skip_suspended=True, include_now=False,
                      adjust_type='pre', adjust_orig=None):
-        if frequency not in ['1m', '1d']:
+        if frequency not in ['1m', '5m', '15m', '1d']:
             raise NotImplementedError
 
         if skip_suspended and instrument.type == 'CS':
             bars = self._filtered_day_bars(instrument)
         elif frequency == '1d':
             bars = self._all_day_bars_of(instrument)
-        elif frequency == '1m':
+        elif frequency in ['1m', '5m', '15m']:
             dt_end = np.uint64(convert_date_to_int(dt + timedelta(days=1)))
-            dt_start = np.uint(convert_date_to_int(dt - timedelta(days=int(bar_count/180) + 3)))
+            dt_start = np.uint(convert_date_to_int(dt - timedelta(days=int(bar_count/180) + 30))) # @TODO
             bars = self._all_min_bars_of(instrument, dt_start, dt_end)
 
         if not self._are_fields_valid(fields, bars.dtype.names):
@@ -340,11 +355,24 @@ class BaseDataSource(AbstractDataSource):
 
         if frequency == '1d':
             dt = np.uint64(convert_date_to_int(dt))
-        elif frequency == '1m':
+        elif frequency in ['1m', '5m', '15m']:
             dt = np.uint64(convert_date_min_to_int(dt))
+
+        count = int(frequency[:-1])
         i = bars['datetime'].searchsorted(dt, side='right')
-        left = i - bar_count if i >= bar_count else 0
-        bars = bars[left:i]
+        if i <= 0:
+            return None
+        left = i - bar_count * count if i >= bar_count * count else 0
+        if count > 1:
+            merge_bars = []
+            for j in range(0, bar_count):
+                if left + (j+1) * count > i:
+                    break;
+                merge_bar = self._history_merge_min_bar(bars[left + j * count:left + (j+1) * count])
+                merge_bars.append(merge_bar)
+            bars = np.array(merge_bars)
+        else:
+            bars = bars[left:i]
         if adjust_type == 'none' or instrument.type in {'Future', 'INDX'}:
             # 期货及指数无需复权
             return bars if fields is None else bars[fields]
