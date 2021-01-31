@@ -102,7 +102,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     plots_area_size = 0
     if "plots" in result_dict:
-        plots_area_size = 5
+        plots_area_size = 8
 
     figsize = (18, 6 + int(plots_area_size * 0.9))
     plt.figure(title, figsize=figsize)
@@ -110,7 +110,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
     gs = gridspec.GridSpec(max_height, 8)
 
     # draw logo
-    ax = plt.subplot(gs[:3, -1:])
+    ax = plt.subplot(gs[:5, -1:])
     ax.axis("off")
     filename = os.path.join(
         os.path.dirname(os.path.realpath(rqalpha.__file__)),
@@ -123,8 +123,9 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     font_size = 12
     value_font_size = 11
-    label_height, value_height = 0.8, 0.6
-    label_height2, value_height2 = 0.35, 0.15
+    label_height, value_height = 0.85, 0.75
+    label_height2, value_height2 = 0.55, 0.45
+    label_height3, value_height3 = 0.25, 0.15
 
     def _(txt):
         return gettext(txt) if use_chinese_fonts else txt
@@ -147,9 +148,11 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         (0.40, label_height2, value_height2, _(u"MaxDrawdown"), "{0:.3%}".format(summary["max_drawdown"]), black, black),
         (0.55, label_height2, value_height2, _(u"Tracking Error"), "{0:.4}".format(summary["tracking_error"]), black, black),
         (0.70, label_height2, value_height2, _(u"Downside Risk"), "{0:.4}".format(summary["downside_risk"]), black, black),
+        (0.00, label_height3, value_height3, _(u"Trades Cnt"), "{cnt}".format(cnt=len(result_dict["trades"])), black,
+         black),
     ]
 
-    ax = plt.subplot(gs[:3, :-1])
+    ax = plt.subplot(gs[:5, :-1])
     ax.axis("off")
     for x, y1, y2, label, value, label_color, value_color in fig_data:
         ax.text(x, y1, label, color=label_color, fontsize=font_size)
@@ -160,7 +163,7 @@ def plot_result(result_dict, show_windows=True, savefile=None):
         ax.text(x, y2, value, color=value_color, fontsize=8)
 
     # strategy vs benchmark
-    ax = plt.subplot(gs[4:10, :])
+    ax = plt.subplot(gs[6:10, :])
 
     ax.get_xaxis().set_minor_locator(ticker.AutoMinorLocator())
     ax.get_yaxis().set_minor_locator(ticker.AutoMinorLocator())
