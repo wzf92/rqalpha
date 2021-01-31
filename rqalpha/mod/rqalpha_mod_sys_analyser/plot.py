@@ -123,9 +123,9 @@ def plot_result(result_dict, show_windows=True, savefile=None):
 
     font_size = 12
     value_font_size = 11
-    label_height, value_height = 0.85, 0.75
-    label_height2, value_height2 = 0.55, 0.45
-    label_height3, value_height3 = 0.25, 0.15
+    label_height, value_height = 0.90, 0.75
+    label_height2, value_height2 = 0.55, 0.40
+    label_height3, value_height3 = 0.20, 0.05
 
     def _(txt):
         return gettext(txt) if use_chinese_fonts else txt
