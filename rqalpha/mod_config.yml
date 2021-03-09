@@ -28,3 +28,5 @@ mod:
     enabled: true
   factor_rsi:
     enabled: true
+  ctp:
+    enabled: true

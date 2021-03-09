@@ -98,6 +98,7 @@ SYSTEM_MOD_LIST = [
     "force_not_open",
     "stop_profit_loss",
     "factor_rsi",
+    "ctp"
 ]
 
 DEFAULT_LOG_DIR = 'abc'
