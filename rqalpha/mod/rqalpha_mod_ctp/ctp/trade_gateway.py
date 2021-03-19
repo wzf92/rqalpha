@@ -54,6 +54,7 @@ class TradeGateway(object):
         self.on_log('开始连接。')
 
         self.td_api = CtpTdApi(self, user_id, password, broker_id, td_address, auth_code, user_production_info)
+        self.td_api.Create()
         for i in range(self._retry_times):
             self.on_log('尝试次数 %d。' % i)
             self.td_api.connect()

@@ -104,6 +104,9 @@ class CtpMdApi(MdApiPy):
 
     def OnRspSubMarketData(self, pSpecificInstrument, pRspInfo, nRequestID, bIsLast):
         """订阅合约回报"""
+        print("OnRspSubMarketData")
+        print(pSpecificInstrument)
+        print(pRspInfo)
         pass
 
     def OnRspUnSubForQuoteRsp(self, pSpecificInstrument, pRspInfo, nRequestID, bIsLast):
@@ -112,7 +115,9 @@ class CtpMdApi(MdApiPy):
 
     def OnRtnDepthMarketData(self, pDepthMarketData):
         """行情推送"""
+        print("OnRtnDepthMarketData")
         tick_dict = TickDict(pDepthMarketData)
+        print(tick_dict)
         if tick_dict.is_valid:
             self.gateway.on_tick(tick_dict)
 
@@ -146,13 +151,14 @@ class CtpMdApi(MdApiPy):
     def subscribe(self, ins_id_list):
         """订阅合约"""
         if len(ins_id_list) > 0:
-            ins_id_list = [str2bytes(i) for i in ins_id_list]
+            #ins_id_list = [str2bytes(i) for i in ins_id_list]
+            ins_id_list = ['SN2106']
             self.SubscribeMarketData(ins_id_list)
 
     def login(self):
         """登录"""
         if not self.logged_in:
-            req = ApiStructure.ReqUserLogin(BrokerID=self.broker_id,
+            req = ApiStructure.ReqUserLoginField(BrokerID=self.broker_id,
                                          UserID=self.user_id,
                                          Password=self.password)
             req_id = self.req_id
@@ -174,7 +180,8 @@ class CtpTdApi(TraderApiPy):
 
         self.connected = False
         self.logged_in = False
-        self.authenticated = False
+        #self.authenticated = False
+        self.authenticated = True
 
         self.user_id = user_id
         self.password = password
@@ -266,6 +273,9 @@ class CtpTdApi(TraderApiPy):
     @query_in_sync
     def OnRspQryInvestorPosition(self, pInvestorPosition, pRspInfo, nRequestID, bIsLast):
         """持仓查询回报"""
+        if pInvestorPosition is None:
+            return self.pos_cache
+
         if pInvestorPosition.InstrumentID:
             order_book_id = make_order_book_id(pInvestorPosition.InstrumentID)
             if order_book_id not in self.pos_cache:
@@ -347,14 +357,19 @@ class CtpTdApi(TraderApiPy):
 
     def authenticate(self):
         """申请验证"""
+        print("authenticate")
         if self.authenticated:
-            req = ApiStructure.AuthenticationInfo(
-                BrokerID=self.broker_id,
-                UserID=self.user_id,
-                AuthInfo=self.auth_code,
-                UserProductInfo=self.user_production_info
-            )
+#            req = ApiStructure.AuthenticationInfo(
+#                BrokerID=self.broker_id,
+#                UserID=self.user_id,
+#                AuthInfo=self.auth_code,
+#                UserProductInfo=self.user_production_info
+#            )
+            req = ApiStructure.ReqAuthenticateField(BrokerID=self.broker_id,
+                                                    AuthCode=self.auth_code,
+                                                    AppID=self.user_production_info)
             req_id = self.req_id
+            print('验证: ' + str(req))
             self.ReqAuthenticate(req, req_id)
             return req_id
         else:
@@ -375,13 +390,15 @@ class CtpTdApi(TraderApiPy):
             return req_id
 
     def qrySettlementInfoConfirm(self):
-        req = ApiStructure.SettlementInfoConfirm(BrokerID=str2bytes(self.broker_id), InvestorID=str2bytes(self.user_id))
+        #req = ApiStructure.SettlementInfoConfirm(BrokerID=str2bytes(self.broker_id), InvestorID=str2bytes(self.user_id))
+        req = ApiStructure.SettlementInfoConfirmField.from_dict({"BrokerID": self.broker_id,
+                                                                 "InvestorID": self.user_id})
         req_id = self.req_id
         self.ReqSettlementInfoConfirm(req, req_id)
 
     def qryInstrument(self):
         self.ins_cache = {}
-        req = ApiStructure.QryInstrument()
+        req = ApiStructure.QryInstrumentField()
         req_id = self.req_id
         self.ReqQryInstrument(req, req_id)
         return req_id
@@ -390,7 +407,7 @@ class CtpTdApi(TraderApiPy):
         ins_dict = self.gateway.get_ins_dict(order_book_id)
         if ins_dict is None:
             return None
-        req = ApiStructure.QryInstrumentCommissionRate(
+        req = ApiStructure.QryInstrumentCommissionRateField(
             InstrumentID=str2bytes(ins_dict.instrument_id),
             InvestorID=str2bytes(self.user_id),
             BrokerID=str2bytes(self.broker_id),
@@ -400,14 +417,17 @@ class CtpTdApi(TraderApiPy):
         return req_id
 
     def qryAccount(self):
-        req = ApiStructure.QryTradingAccount()
+        req = ApiStructure.QryTradingAccountField(
+                BrokerID=str2bytes(self.broker_id),
+                InvestorID=str2bytes(self.user_id)
+                )
         req_id = self.req_id
         self.ReqQryTradingAccount(req, req_id)
         return req_id
 
     def qryPosition(self):
         self.pos_cache = {}
-        req = ApiStructure.QryInvestorPosition(
+        req = ApiStructure.QryInvestorPositionField(
             BrokerID=str2bytes(self.broker_id),
             InvestorID=str2bytes(self.user_id)
         )
@@ -417,7 +437,7 @@ class CtpTdApi(TraderApiPy):
 
     def qryOrder(self):
         self.order_cache = {}
-        req = ApiStructure.QryOrder(
+        req = ApiStructure.QryOrderField(
             BrokerID=str2bytes(self.broker_id),
             InvestorID=str2bytes(self.user_id)
         )

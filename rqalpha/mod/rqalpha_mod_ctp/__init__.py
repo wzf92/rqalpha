@@ -17,21 +17,29 @@
 
 
 __config__ = {
+    'all_day': False,
     "login": {
         'user_id': "85012173",
         'password': "1330840aA",
-        'broker_id': "8080",
+        'broker_id': "8000",
         'auth_code': "PRDCTCXGFOMWPTPA",
         'user_production_info': "client_ctplq235_3.0"
+#        'user_id': "20108068",
+#        'password': "1330840Aa",
+#        'broker_id': "8080",
+#        'auth_code': "7C150517RNNRKFM2",
+#        'user_production_info': "client_ctplq123_2.0"
     },
     "event": {
         "enabled": True,
         "all_day": False,
-        "address": "tcp://180.168.212.238:41214",
+        "address": "tcp://210.5.151.248:41313",
+#        "address": "tcp://180.168.212.238:41214",
     },
     "trade": {
         "enabled": True,
-        "address": "tcp://180.168.212.238:41206",
+        "address": "tcp://210.5.151.248:41305",
+#        "address": "tcp://180.168.212.238:41206",
     },
 }
 

@@ -48,7 +48,8 @@ class SimulationMod(AbstractMod):
                 MATCHING_TYPE.NEXT_TICK_BEST_OWN,
                 MATCHING_TYPE.NEXT_TICK_BEST_COUNTERPARTY,
             ]:
-                raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
+                pass
+                # raise RuntimeError(_("Not supported matching type {}").format(mod_config.matching_type))
         else:
             if mod_config.matching_type not in [
                 MATCHING_TYPE.NEXT_BAR_OPEN,

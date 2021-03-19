@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import as _init
+from ._other import other
+#from ._t1 import MdApi
+from ._MdApi import _init, MdApi
 
 __author__ = 'lovelylain'
 __version__ = '0.2.1'
@@ -831,7 +834,9 @@ def _init(Module, MdSpi, TraderSpi):
 
     @lazy_property
     def MdApi():
-        from ._MdApi import _init, MdApi; _init(ApiStruct)
+        #from ._MdApi import _init, MdApi; _init(ApiStruct)
+        from ._MdApi import _init, MdApi
+        _init(ApiStruct)
         return type('MdApi', (MdApi,), MdSpi)
 
     @lazy_property

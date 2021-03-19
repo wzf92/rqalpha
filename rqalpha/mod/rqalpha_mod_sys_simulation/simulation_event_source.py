@@ -267,6 +267,7 @@ class SimulationEventSource(AbstractEventSource):
                             break
 
                         last_dt = calendar_dt
+                        print(tick)
                         yield Event(EVENT.TICK, calendar_dt=calendar_dt, trading_dt=trading_dt, tick=tick)
 
                     else:

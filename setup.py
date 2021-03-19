@@ -56,7 +56,8 @@ setup(
     package_data={
         'rqalpha': ['*.yml',
                     'examples/*.*', 'examples/data_source/*.*', 'examples/extend_api/*.*',
-                    'resource/*.*', 'utils/translations/zh_Hans_CN/LC_MESSAGES/*'],
+                    'resource/*.*', 'utils/translations/zh_Hans_CN/LC_MESSAGES/*',
+                    'rqalpha/mod/rqalpha_mod_ctp/ctp/pyctp/linux64_36/*'],
     },
     url='https://github.com/ricequant/rqalpha',
     install_requires=requirements,

@@ -24,7 +24,7 @@ from datetime import date
 class CtpDataSource(BaseDataSource):
     def __init__(self, env, md_gateway, trade_gateway):
         path = env.config.base.data_bundle_path
-        super(CtpDataSource, self).__init__(path)
+        super(CtpDataSource, self).__init__(path, {})
         self._md_gateway = md_gateway
         self._md_gateway = trade_gateway
 
